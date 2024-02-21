@@ -7,7 +7,7 @@ import 'package:sqflite/sqflite.dart';
 
 class DBHelper {
   static const String _dbName = 'products.db';
-  static const int _dbVersion = 7;
+  static const int _dbVersion = 8;
   static const String tableProducts = 'products';
   static const String tableCart = 'cart';
 
@@ -32,7 +32,7 @@ class DBHelper {
         $idCol INTEGER PRIMARY KEY AUTOINCREMENT,
         $codeCartCol TEXT,
         $quantityCartCol INTEGER,
-        FOREIGN KEY($codeCartCol) REFERENCES $tableProducts($codeCol)
+        FOREIGN KEY($codeCartCol) REFERENCES $tableProducts($codeCol) ON DELETE CASCADE
       )
     ''';
 
@@ -46,6 +46,7 @@ class DBHelper {
       onUpgrade: (db, oldVer, newVer) {
         if (newVer > oldVer) {
           db.execute('DROP TABLE IF EXISTS $tableProducts');
+          db.execute('DROP TABLE IF EXISTS $tableCart');
           db.execute(sqlProduct);
           db.execute(sqlCart);
         }
@@ -104,14 +105,10 @@ class DBHelper {
     );
   }
 
-  static Future<int> deleteCart([Cart? c, String? code]) async {
+  static Future<int> deleteCart(Cart c) async {
     final db = await openDB();
 
-    if (code != null) {
-      return db.delete(tableCart, where: '$codeCartCol = ?', whereArgs: [code]);
-    }
-
-    return db.delete(tableCart, where: '$idCol = ?', whereArgs: [c!.id]);
+    return db.delete(tableCart, where: '$idCol = ?', whereArgs: [c.id]);
   }
 
   static Future<int> updateProduct(Product p) async {
@@ -127,8 +124,6 @@ class DBHelper {
 
   static Future<int> deleteProduct(String code) async {
     final db = await openDB();
-
-    deleteCart(null, code);
 
     return await db.delete(
       tableProducts,

@@ -30,11 +30,9 @@ class Cart {
 }
 
 class CartList extends ChangeNotifier {
-  List<Cart> _cart = [];
+  Future<List<Cart>> get cart async => await DBHelper.getCart();
 
-  Future<List<Cart>> get cart async => _cart = await DBHelper.getCart();
-
-  void insertCart(Product p) async {
+  Future<void> insertCart(Product p) async {
     final cartList = await DBHelper.getCart();
     // final cartCode = cartList.map((c) => c.productCode).toList();
 
@@ -46,7 +44,6 @@ class CartList extends ChangeNotifier {
     final index = cartList.indexWhere((c) => c.productCode == p.code);
 
     if (index != -1) {
-      print("meron");
       incrementQuantity(cartList[index]);
       return;
     }
